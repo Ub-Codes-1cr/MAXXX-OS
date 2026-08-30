@@ -2,6 +2,10 @@
 
 **Local-First AI Orchestration Agent for Social Media Management**
 
+[![Deploy to Vercel](https://vercel.com/button)](https://maxxx-os.vercel.app)
+
+**Live Dashboard:** https://maxxx-os.vercel.app
+
 MAXXX OS is a privacy-focused, anti-API alternative to social media management tools. It uses local LLMs (Ollama + Hermes/Qwen) and Playwright browser automation to post to 20+ platforms without cloud dependencies.
 
 ## Features
