@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAXXX OS - Local-First AI Social Media Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'JetBrains Mono', monospace; }
+        body { background: #000; color: #fff; }
+        .glow { box-shadow: 0 0 60px rgba(255,255,255,0.1); }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.05);opacity:0.8} }
+        .card { background: #111; border: 1px solid #333; transition: all 0.2s; }
+        .card:hover { border-color: #666; transform: translateY(-2px); }
+        .btn { background: #fff; color: #000; border: none; padding: 12px 24px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+        .btn:hover { background: #ccc; }
+        .btn-outline { background: transparent; color: #fff; border: 1px solid #333; }
+        .btn-outline:hover { border-color: #fff; }
+        .input { background: #111; border: 1px solid #333; color: #fff; padding: 12px; width: 100%; outline: none; }
+        .input:focus { border-color: #fff; }
+        .nav-item { padding: 12px 20px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: #111; }
+        .nav-item.active { background: #111; border-left-color: #fff; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-active { background: #22c55e; }
+        .status-error { background: #ef4444; }
+        .status-warning { background: #fbbf24; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .orb { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, #888, #333); animation: pulse 2s ease-in-out infinite; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; background: #22c55e; color: #000; font-weight: bold; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #111; border: 1px solid #333; padding: 32px; max-width: 400px; width: 100%; }
+        .stat-card { background: #111; border: 1px solid #333; padding: 24px; }
+        .platform-card { background: #111; border: 1px solid #333; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .platform-card:hover { border-color: #fff; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Toast -->
+    <div id="toast" class="toast">Post published successfully!</div>
+    
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal">
+            <h3 class="text-xl font-bold mb-4">CONFIRM POST</h3>
+            <p class="text-gray-400 mb-6">Post to <span id="modalPlatform">X</span>?</p>
+            <div class="flex gap-4">
+                <button class="btn flex-1" onclick="confirmPost()">POST</button>
+                <button class="btn btn-outline flex-1" onclick="closeModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 border-r border-gray-800 flex flex-col" style="background:#0a0a0a">
+            <div class="p-6 border-b border-gray-800">
+                <h1 class="text-2xl font-bold tracking-tight">MAXXX OS</h1>
+                <p class="text-xs text-gray-500 mt-1">LOCAL-FIRST AI AGENT</p>
+            </div>
+            <nav class="flex-1 py-4">
+                <div class="nav-item active" onclick="showPage('dashboard')">
+                    <span class="mr-3">&#9679;</span> DASHBOARD
+                </div>
+                <div class="nav-item" onclick="showPage('brain')">
+                    <span class="mr-3">&#9679;</span> BRAIN
+                </div>
+                <div class="nav-item" onclick="showPage('voice')">
+                    <span class="mr-3">&#9679;</span> VOICE INPUT
+                </div>
+                <div class="nav-item" onclick="showPage('draft')">
+                    <span class="mr-3">&#9679;</span> DRAFT EDITOR
+                </div>
+                <div class="nav-item" onclick="showPage('review')">
+                    <span class="mr-3">&#9679;</span> REVIEW & POST
+                </div>
+                <div class="nav-item" onclick="showPage('schedule')">
+                    <span class="mr-3">&#9679;</span> SCHEDULE
+                </div>
+                <div class="nav-item" onclick="showPage('analytics')">
+                    <span class="mr-3">&#9679;</span> ANALYTICS
+                </div>
+                <div class="nav-item" onclick="showPage('settings')">
+                    <span class="mr-3">&#9679;</span> SETTINGS
+                </div>
+            </nav>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white text-black flex items-center justify-center font-bold">U</div>
+                    <div>
+                        <div class="text-sm font-bold">Ubada</div>
+                        <div class="text-xs text-gray-500">Admin</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            
+            <!-- DASHBOARD PAGE -->
+            <div id="page-dashboard" class="page active p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold">DASHBOARD</h2>
+                        <p class="text-gray-500 mt-1">Welcome back. Your AI agent is ready.</p>
+                    </div>
+                    <div class="orb"></div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="stat-card">
+                        <div class="text-gray-500 text-sm mb-2">TOTAL POSTS</div>
+                        <div class="text-4xl font-bold">147</div>
+                        <div class="text-green-500 text-sm mt-2">&#9650; 12% this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-gray-500 text-sm mb-2">PLATFORMS</div>
+                        <div class="text-4xl font-bold">12/20</div>
+                        <div class="text-gray-400 text-sm mt-2">Active connections</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-gray-500 text-sm mb-2">AI DRAFTS</div>
+                        <div class="text-4xl font-bold">89</div>
+                        <div class="text-green-500 text-sm mt-2">&#9650; 8 today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-gray-500 text-sm mb-2">SUCCESS RATE</div>
+                        <div class="text-4xl font-bold">94%</div>
+                        <div class="text-green-500 text-sm mt-2">&#9650; 2% improvement</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Quick Actions -->
+                <div class="grid grid-cols-3 gap-8 mb-8">
+                    <div class="col-span-2 card p-6">
+                        <h3 class="text-lg font-bold mb-4">RECENT ACTIVITY</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div class="flex items-center gap-3">
+                                    <span class="status-dot status-active"></span>
+                                    <div>
+                                        <div class="text-sm">Posted to X</div>
+                                        <div class="text-xs text-gray-500">Building MAXXX OS locally...</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">2 min ago</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div class="flex items-center gap-3">
+                                    <span class="status-dot status-active"></span>
+                                    <div>
+                                        <div class="text-sm">Posted to LinkedIn</div>
+                                        <div class="text-xs text-gray-500">Local AI is the future...</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">15 min ago</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div class="flex items-center gap-3">
+                                    <span class="status-dot status-warning"></span>
+                                    <div>
+                                        <div class="text-sm">Staged on Reddit</div>
+                                        <div class="text-xs text-gray-500">Zero cloud APIs challenge...</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">1 hr ago</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div class="flex items-center gap-3">
+                                    <span class="status-dot status-active"></span>
+                                    <div>
+                                        <div class="text-sm">Posted to Dev.to</div>
+                                        <div class="text-xs text-gray-500">How I built MAXXX OS...</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">3 hrs ago</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">QUICK ACTIONS</h3>
+                        <div class="space-y-3">
+                            <button class="btn w-full" onclick="showPage('brain')">GENERATE DRAFT</button>
+                            <button class="btn btn-outline w-full" onclick="showPage('review')">POST NOW</button>
+                            <button class="btn btn-outline w-full" onclick="showPage('schedule')">SCHEDULE</button>
+                            <button class="btn btn-outline w-full" onclick="showPage('analytics')">VIEW ANALYTICS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform Grid -->
+                <h3 class="text-lg font-bold mb-4">PLATFORMS</h3>
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">X</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">LinkedIn</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">GitHub</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Reddit</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Dev.to</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Instagram</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">YouTube</div></div>
+                    <div class="platform-card"><span class="status-dot status-warning"></span><div class="mt-2 text-sm">Threads</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Facebook</div></div>
+                    <div class="platform-card"><span class="status-dot status-error"></span><div class="mt-2 text-sm">Telegram</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Discord</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">HackerNews</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Hashnode</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Substack</div></div>
+                    <div class="platform-card"><span class="status-dot status-warning"></span><div class="mt-2 text-sm">ProductHunt</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Quora</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Peerlist</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">LeetCode</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Bluesky</div></div>
+                    <div class="platform-card"><span class="status-dot status-active"></span><div class="mt-2 text-sm">Medium</div></div>
+                </div>
+            </div>
+
+            <!-- BRAIN PAGE -->
+            <div id="page-brain" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">BRAIN - AI CONTENT GENERATION</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">INPUT</h3>
+                        <textarea id="brainInput" class="input mb-4" rows="4" placeholder="Enter your content idea..."></textarea>
+                        <select class="input mb-4">
+                            <option>X (Twitter)</option>
+                            <option>LinkedIn</option>
+                            <option>GitHub</option>
+                            <option>Reddit</option>
+                            <option>Dev.to</option>
+                            <option>Instagram</option>
+                            <option>YouTube</option>
+                        </select>
+                        <button class="btn w-full" onclick="generateDraft()">GENERATE DRAFT</button>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">OUTPUT</h3>
+                        <div id="brainOutput" class="bg-black p-4 mb-4 min-h-[200px] text-gray-400">
+                            Generated draft will appear here...
+                        </div>
+                        <div class="flex gap-2 mb-4">
+                            <span class="text-xs bg-gray-800 px-2 py-1">0/280 chars</span>
+                            <span class="text-xs bg-green-900 text-green-300 px-2 py-1">VALID</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn flex-1" onclick="showToast('Copied to clipboard!')">COPY</button>
+                            <button class="btn flex-1" onclick="showPage('review')">POST</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VOICE PAGE -->
+            <div id="page-voice" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">VOICE INPUT</h2>
+                <div class="card p-8 max-w-xl mx-auto text-center">
+                    <div class="w-40 h-40 mx-auto mb-8 rounded-full border-4 border-gray-700 flex items-center justify-center cursor-pointer hover:border-white transition-all" onclick="toggleRecording()">
+                        <div id="micIcon" class="text-6xl">&#127908;</div>
+                    </div>
+                    <p id="recordingStatus" class="text-gray-500 mb-8">Click to start recording</p>
+                    <div class="mb-6">
+                        <input type="text" class="input mb-4" placeholder="Or type your idea here...">
+                        <button class="btn w-full" onclick="showPage('brain')">SEND TO BRAIN</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRAFT EDITOR PAGE -->
+            <div id="page-draft" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">DRAFT EDITOR</h2>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <select class="input w-48">
+                            <option>X (Twitter)</option>
+                            <option>LinkedIn</option>
+                            <option>GitHub</option>
+                        </select>
+                        <span class="text-sm text-gray-500">0/280 characters</span>
+                    </div>
+                    <textarea class="input mb-4" rows="8" placeholder="Write your post here..."></textarea>
+                    <div class="flex gap-2">
+                        <button class="btn flex-1">VALIDATE</button>
+                        <button class="btn btn-outline flex-1">COPY</button>
+                        <button class="btn flex-1" onclick="showPage('review')">POST</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVIEW & POST PAGE -->
+            <div id="page-review" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">REVIEW & POST</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">PREVIEW</h3>
+                        <div class="bg-black p-4 border border-gray-800">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-sm">U</div>
+                                <div>
+                                    <div class="font-bold text-sm">@ub_codes_1cr</div>
+                                    <div class="text-xs text-gray-500">Just now</div>
+                                </div>
+                            </div>
+                            <p class="text-sm mb-3">I spent 450 lines of code building a local AI agent that posts to 20 platforms without cloud APIs. Here's what happened: &#128640;</p>
+                            <p class="text-sm mb-3">#MAXXXOS #AI #LocalFirst #BuildInPublic</p>
+                            <div class="flex gap-6 text-gray-500 text-sm">
+                                <span>&#128172; 12</span>
+                                <span>&#128153; 89</span>
+                                <span>&#128227; 34</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">POST OPTIONS</h3>
+                        <div class="mb-4">
+                            <label class="text-sm text-gray-500 mb-2 block">PLATFORM</label>
+                            <select class="input">
+                                <option>X (Twitter)</option>
+                                <option>LinkedIn</option>
+                                <option>GitHub</option>
+                                <option>Reddit</option>
+                            </select>
+                        </div>
+                        <div class="mb-6 flex items-center justify-between">
+                            <span class="text-sm">AUTO-POST</span>
+                            <div class="w-12 h-6 bg-gray-700 rounded cursor-pointer" onclick="this.classList.toggle('bg-white')">
+                                <div class="w-5 h-5 bg-white rounded transform translate-x-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="status-dot status-active"></span>
+                                <span>Browser Connected</span>
+                            </div>
+                        </div>
+                        <button class="btn w-full mb-3" onclick="showConfirmModal()">POST NOW</button>
+                        <button class="btn btn-outline w-full" onclick="showToast('Copied to clipboard!')">COPY TO CLIPBOARD</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHEDULE PAGE -->
+            <div id="page-schedule" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">SCHEDULE</h2>
+                <div class="grid grid-cols-3 gap-8">
+                    <div class="col-span-2 card p-6">
+                        <h3 class="text-lg font-bold mb-4">SCHEDULED POSTS</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div>
+                                    <div class="text-sm">X: "Building in public update"</div>
+                                    <div class="text-xs text-gray-500">Today, 3:00 PM</div>
+                                </div>
+                                <button class="text-xs text-red-400">CANCEL</button>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-black">
+                                <div>
+                                    <div class="text-sm">LinkedIn: "Local AI revolution"</div>
+                                    <div class="text-xs text-gray-500">Tomorrow, 9:00 AM</div>
+                                </div>
+                                <button class="text-xs text-red-400">CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4">ADD SCHEDULE</h3>
+                        <input type="date" class="input mb-3">
+                        <input type="time" class="input mb-3">
+                        <select class="input mb-3">
+                            <option>X (Twitter)</option>
+                            <option>LinkedIn</option>
+                        </select>
+                        <button class="btn w-full">SCHEDULE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS PAGE -->
+            <div id="page-analytics" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">ANALYTICS</h2>
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="stat-card"><div class="text-gray-500 text-sm">IMPRESSIONS</div><div class="text-3xl font-bold">12.4K</div></div>
+                    <div class="stat-card"><div class="text-gray-500 text-sm">ENGAGEMENT</div><div class="text-3xl font-bold">2.1K</div></div>
+                    <div class="stat-card"><div class="text-gray-500 text-sm">BEST PLATFORM</div><div class="text-3xl font-bold">X</div></div>
+                    <div class="stat-card"><div class="text-gray-500 text-sm">AVG RESPONSE</div><div class="text-3xl font-bold">2.3h</div></div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4">POST PERFORMANCE</h3>
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-gray-500 text-left border-b border-gray-800">
+                            <th class="pb-3">DATE</th><th class="pb-3">PLATFORM</th><th class="pb-3">IMPRESSIONS</th><th class="pb-3">LIKES</th><th class="pb-3">STATUS</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr class="border-b border-gray-800"><td class="py-3">Aug 30</td><td>X</td><td>1,234</td><td>89</td><td><span class="text-green-400">POSTED</span></td></tr>
+                            <tr class="border-b border-gray-800"><td class="py-3">Aug 30</td><td>LinkedIn</td><td>2,341</td><td>156</td><td><span class="text-green-400">POSTED</span></td></tr>
+                            <tr class="border-b border-gray-800"><td class="py-3">Aug 29</td><td>Reddit</td><td>4,521</td><td>234</td><td><span class="text-green-400">POSTED</span></td></tr>
+                            <tr class="border-b border-gray-800"><td class="py-3">Aug 29</td><td>Dev.to</td><td>891</td><td>67</td><td><span class="text-yellow-400">STAGED</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SETTINGS PAGE -->
+            <div id="page-settings" class="page p-8">
+                <h2 class="text-3xl font-bold mb-8">SETTINGS</h2>
+                <div class="card p-6 max-w-2xl">
+                    <h3 class="text-lg font-bold mb-4">AI CONFIGURATION</h3>
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-500 mb-2 block">OLLAMA URL</label>
+                        <input type="text" class="input" value="http://localhost:11434">
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-500 mb-2 block">PRIMARY MODEL</label>
+                        <select class="input">
+                            <option>hermes3:8b</option>
+                            <option>qwen2.5:7b</option>
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label class="text-sm text-gray-500 mb-2 block">TEMPERATURE: <span id="tempVal">0.3</span></label>
+                        <input type="range" class="w-full" min="0" max="100" value="30" oninput="document.getElementById('tempVal').textContent=(this.value/100).toFixed(1)">
+                    </div>
+                    <button class="btn" onclick="showToast('Settings saved!')">SAVE CHANGES</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            event.target.closest('.nav-item')?.classList.add('active');
+        }
+
+        // Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Modal
+        function showConfirmModal() {
+            document.getElementById('confirmModal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+        function confirmPost() {
+            closeModal();
+            showToast('Post published successfully!');
+        }
+
+        // Voice Recording
+        let isRecording = false;
+        function toggleRecording() {
+            isRecording = !isRecording;
+            const icon = document.getElementById('micIcon');
+            const status = document.getElementById('recordingStatus');
+            if (isRecording) {
+                icon.style.color = '#ef4444';
+                status.textContent = 'Recording... Click to stop';
+            } else {
+                icon.style.color = '#fff';
+                status.textContent = 'Click to start recording';
+                showToast('Voice captured! Sending to Brain...');
+            }
+        }
+
+        // Generate Draft (Mock)
+        function generateDraft() {
+            const input = document.getElementById('brainInput').value;
+            const output = document.getElementById('brainOutput');
+            output.innerHTML = '<div class="text-gray-500">Generating...</div>';
+            setTimeout(() => {
+                output.innerHTML = `<p class="text-white">I spent 450 lines of code building a local AI agent that posts to 20 platforms without cloud APIs. Zero cloud. Zero APIs. 100% local. Here's what happened: &#128640;</p><p class="text-white mt-2">#MAXXXOS #AI #LocalFirst #BuildInPublic</p>`;
+                showToast('Draft generated!');
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
